@@ -14,6 +14,12 @@ class _LandingScreenState extends State<LandingScreen> {
   final _scrollCtrl = ScrollController();
   bool _navSolid = false;
 
+  // Anchor untuk navigasi menu (scroll ke bagian terkait).
+  final _featuresKey = GlobalKey();
+  final _newsKey = GlobalKey();
+  final _galleryKey = GlobalKey();
+  final _aboutKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +35,42 @@ class _LandingScreenState extends State<LandingScreen> {
     super.dispose();
   }
 
+  /// Menangani klik menu di header & footer.
+  void onNav(String target) {
+    switch (target) {
+      case 'home':
+        _scrollCtrl.animateTo(0,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut);
+        break;
+      case 'enroll':
+        context.go('/enroll');
+        break;
+      case 'features':
+        _scrollToKey(_featuresKey);
+        break;
+      case 'news':
+        _scrollToKey(_newsKey);
+        break;
+      case 'gallery':
+        _scrollToKey(_galleryKey);
+        break;
+      case 'about':
+        _scrollToKey(_aboutKey);
+        break;
+    }
+  }
+
+  void _scrollToKey(GlobalKey key) {
+    final ctx = key.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,17 +78,28 @@ class _LandingScreenState extends State<LandingScreen> {
         children: [
           CustomScrollView(
             controller: _scrollCtrl,
-            slivers: const [
-              SliverToBoxAdapter(child: _HeroSection()),
-              SliverToBoxAdapter(child: _StatsSection()),
-              SliverToBoxAdapter(child: _FeaturesSection()),
-              SliverToBoxAdapter(child: _NewsSection()),
-              SliverToBoxAdapter(child: _GallerySection()),
-              SliverToBoxAdapter(child: _InfoSection()),
-              SliverToBoxAdapter(child: _Footer()),
+            // Bangun semua bagian agar anchor menu selalu tersedia untuk scroll.
+            // ignore: deprecated_member_use
+            cacheExtent: 4000,
+            slivers: [
+              const SliverToBoxAdapter(child: _HeroSection()),
+              const SliverToBoxAdapter(child: _StatsSection()),
+              SliverToBoxAdapter(
+                  child: KeyedSubtree(
+                      key: _featuresKey, child: const _FeaturesSection())),
+              SliverToBoxAdapter(
+                  child: KeyedSubtree(
+                      key: _newsKey, child: const _NewsSection())),
+              SliverToBoxAdapter(
+                  child: KeyedSubtree(
+                      key: _galleryKey, child: const _GallerySection())),
+              SliverToBoxAdapter(
+                  child: KeyedSubtree(
+                      key: _aboutKey, child: const _InfoSection())),
+              SliverToBoxAdapter(child: _Footer(onNav: onNav)),
             ],
           ),
-          _NavBar(solid: _navSolid),
+          _NavBar(solid: _navSolid, onNav: onNav),
         ],
       ),
     );
@@ -56,8 +109,9 @@ class _LandingScreenState extends State<LandingScreen> {
 // ─── Navigation Bar ───────────────────────────────────────────────────────────
 
 class _NavBar extends StatelessWidget {
-  const _NavBar({required this.solid});
+  const _NavBar({required this.solid, required this.onNav});
   final bool solid;
+  final void Function(String target) onNav;
 
   @override
   Widget build(BuildContext context) {
@@ -99,11 +153,22 @@ class _NavBar extends StatelessWidget {
               ),
               const Spacer(),
               if (!narrow) ...[
-                _NavLink(label: 'Beranda', solid: solid,
-                    onTap: () {}),
-                _NavLink(label: 'Berita', solid: solid, onTap: () {}),
-                _NavLink(label: 'Galeri', solid: solid, onTap: () {}),
-                _NavLink(label: 'Tentang', solid: solid, onTap: () {}),
+                _NavLink(
+                    label: 'Beranda',
+                    solid: solid,
+                    onTap: () => onNav('home')),
+                _NavLink(
+                    label: 'Berita',
+                    solid: solid,
+                    onTap: () => onNav('news')),
+                _NavLink(
+                    label: 'Galeri',
+                    solid: solid,
+                    onTap: () => onNav('gallery')),
+                _NavLink(
+                    label: 'Tentang',
+                    solid: solid,
+                    onTap: () => onNav('about')),
                 const SizedBox(width: 8),
               ],
               OutlinedButton(
@@ -1162,7 +1227,8 @@ class _ContactRow extends StatelessWidget {
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
 class _Footer extends StatelessWidget {
-  const _Footer();
+  const _Footer({required this.onNav});
+  final void Function(String target) onNav;
 
   @override
   Widget build(BuildContext context) {
@@ -1182,7 +1248,7 @@ class _Footer extends StatelessWidget {
                   children: [
                     _FooterBrand(scheme: scheme, theme: theme),
                     const SizedBox(height: 32),
-                    _FooterLinks(scheme: scheme),
+                    _FooterLinks(scheme: scheme, onNav: onNav),
                     const SizedBox(height: 32),
                     _FooterContact(scheme: scheme),
                   ],
@@ -1196,7 +1262,7 @@ class _Footer extends StatelessWidget {
                     const SizedBox(width: 32),
                     Expanded(
                         flex: 3,
-                        child: _FooterLinks(scheme: scheme)),
+                        child: _FooterLinks(scheme: scheme, onNav: onNav)),
                     const SizedBox(width: 32),
                     Expanded(
                         flex: 3,
@@ -1274,18 +1340,19 @@ class _FooterBrand extends StatelessWidget {
 }
 
 class _FooterLinks extends StatelessWidget {
-  const _FooterLinks({required this.scheme});
+  const _FooterLinks({required this.scheme, required this.onNav});
   final ColorScheme scheme;
+  final void Function(String target) onNav;
 
   @override
   Widget build(BuildContext context) {
-    const links = [
-      'Profil Sekolah',
-      'Program Keahlian',
-      'Ekstrakurikuler',
-      'Prestasi',
-      'PPDB Online',
-      'Hubungi Kami',
+    const links = <(String, String)>[
+      ('Profil Sekolah', 'about'),
+      ('Program Keahlian', 'features'),
+      ('Berita & Prestasi', 'news'),
+      ('Galeri', 'gallery'),
+      ('PPDB Online', 'enroll'),
+      ('Hubungi Kami', 'about'),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1297,12 +1364,16 @@ class _FooterLinks extends StatelessWidget {
                 fontSize: 14)),
         const SizedBox(height: 14),
         ...links.map(
-          (l) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(l,
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 13)),
+          (l) => InkWell(
+            onTap: () => onNav(l.$2),
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Text(l.$1,
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 13)),
+            ),
           ),
         ),
       ],
