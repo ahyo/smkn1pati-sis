@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'news_data.dart';
+
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
 
@@ -555,35 +557,7 @@ class _FeaturesSection extends StatelessWidget {
 class _NewsSection extends StatelessWidget {
   const _NewsSection();
 
-  static final _news = [
-    _NewsItem(
-      category: 'Prestasi',
-      title: 'SMK N 1 Pati Raih Juara 1 LKS Tingkat Provinsi Jawa Tengah',
-      excerpt:
-          'Tim siswa jurusan Teknik Otomotif berhasil meraih juara pertama dalam ajang Lomba Kompetensi Siswa (LKS) tingkat Provinsi Jawa Tengah yang diselenggarakan di Semarang.',
-      date: '18 Mei 2026',
-      color: Colors.green,
-      icon: Icons.emoji_events_outlined,
-    ),
-    _NewsItem(
-      category: 'Pengumuman',
-      title: 'Pendaftaran Peserta Didik Baru Tahun Ajaran 2026/2027 Dibuka',
-      excerpt:
-          'Pendaftaran Peserta Didik Baru (PPDB) untuk tahun ajaran 2026/2027 resmi dibuka. Calon siswa dapat mendaftar secara online melalui portal pendaftaran sekolah.',
-      date: '10 Mei 2026',
-      color: Colors.blue,
-      icon: Icons.assignment_ind_outlined,
-    ),
-    _NewsItem(
-      category: 'Kegiatan',
-      title: 'Praktik Kerja Lapangan Batch 2 Resmi Dimulai',
-      excerpt:
-          'Sebanyak 120 siswa kelas XI mengikuti program Praktik Kerja Lapangan (PKL) di berbagai perusahaan mitra sekolah di wilayah Pati, Kudus, dan Rembang.',
-      date: '3 Mei 2026',
-      color: Colors.orange,
-      icon: Icons.work_outline,
-    ),
-  ];
+  static const _news = kNewsArticles;
 
   @override
   Widget build(BuildContext context) {
@@ -617,87 +591,88 @@ class _NewsSection extends StatelessWidget {
               final n = _news[i];
               return Card(
                 clipBehavior: Clip.antiAlias,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Thumbnail placeholder
-                    Container(
-                      height: 130,
-                      color: n.color.withValues(alpha: 0.12),
-                      child: Stack(
-                        children: [
-                          Center(
-                            child: Icon(n.icon,
-                                size: 54,
-                                color: n.color.withValues(alpha: 0.35)),
-                          ),
-                          Positioned(
-                            top: 12,
-                            left: 12,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: n.color,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                n.category,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(14),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                child: InkWell(
+                  onTap: () => context.go('/berita/${n.id}'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Thumbnail
+                      SizedBox(
+                        height: 140,
+                        width: double.infinity,
+                        child: Stack(
+                          fit: StackFit.expand,
                           children: [
-                            Text(
-                              n.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700),
+                            NetworkImageBox(
+                              url: n.imageUrl(800),
+                              color: n.color,
+                              icon: n.icon,
                             ),
-                            const SizedBox(height: 8),
-                            Expanded(
-                              child: Text(
-                                n.excerpt,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    color: scheme.onSurfaceVariant,
-                                    fontSize: 12,
-                                    height: 1.5),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(Icons.calendar_today_outlined,
-                                    size: 12,
-                                    color: scheme.onSurfaceVariant),
-                                const SizedBox(width: 4),
-                                Text(
-                                  n.date,
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: scheme.onSurfaceVariant),
-                                ),
-                              ],
+                            Positioned(
+                              top: 12,
+                              left: 12,
+                              child: _CategoryBadge(
+                                  label: n.category, color: n.color),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                n.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 8),
+                              Expanded(
+                                child: Text(
+                                  n.excerpt,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      color: scheme.onSurfaceVariant,
+                                      fontSize: 12,
+                                      height: 1.5),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.calendar_today_outlined,
+                                      size: 12,
+                                      color: scheme.onSurfaceVariant),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    n.date,
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: scheme.onSurfaceVariant),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    'Selengkapnya',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: n.color),
+                                  ),
+                                  Icon(Icons.arrow_forward,
+                                      size: 12, color: n.color),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -708,21 +683,59 @@ class _NewsSection extends StatelessWidget {
   }
 }
 
-class _NewsItem {
-  const _NewsItem({
-    required this.category,
-    required this.title,
-    required this.excerpt,
-    required this.date,
+/// Gambar jaringan dengan placeholder berwarna + ikon saat memuat/gagal.
+class NetworkImageBox extends StatelessWidget {
+  const NetworkImageBox({
+    super.key,
+    required this.url,
     required this.color,
     required this.icon,
+    this.iconSize = 54,
   });
-  final String category;
-  final String title;
-  final String excerpt;
-  final String date;
+
+  final String url;
   final Color color;
   final IconData icon;
+  final double iconSize;
+
+  Widget _fallback() => Container(
+        color: color.withValues(alpha: 0.12),
+        alignment: Alignment.center,
+        child: Icon(icon, size: iconSize, color: color.withValues(alpha: 0.4)),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, progress) =>
+          progress == null ? child : _fallback(),
+      errorBuilder: (context, error, stack) => _fallback(),
+    );
+  }
+}
+
+class _CategoryBadge extends StatelessWidget {
+  const _CategoryBadge({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+            color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
 }
 
 // ─── Gallery ──────────────────────────────────────────────────────────────────
@@ -731,19 +744,22 @@ class _GallerySection extends StatelessWidget {
   const _GallerySection();
 
   static final _gallery = [
-    _GalleryItem('Laboratorium Komputer',
-        Icons.computer_outlined, Color(0xFF1976D2)),
-    _GalleryItem('Bengkel Otomotif',
-        Icons.car_repair_outlined, Color(0xFFE65100)),
-    _GalleryItem('Perpustakaan Digital',
-        Icons.local_library_outlined, Color(0xFF388E3C)),
-    _GalleryItem('Upacara Bendera',
-        Icons.flag_outlined, Color(0xFF7B1FA2)),
-    _GalleryItem('Kegiatan Olahraga',
-        Icons.sports_soccer_outlined, Color(0xFFF57C00)),
-    _GalleryItem('Wisuda & Kelulusan',
-        Icons.school_outlined, Color(0xFF00838F)),
+    _GalleryItem('Laboratorium Komputer', Icons.computer_outlined,
+        Color(0xFF1976D2), 'photo-1581091226825-a6a2a5aee158'),
+    _GalleryItem('Bengkel Otomotif', Icons.car_repair_outlined,
+        Color(0xFFE65100), 'photo-1606761568499-6d2451b23c66'),
+    _GalleryItem('Perpustakaan Digital', Icons.local_library_outlined,
+        Color(0xFF388E3C), 'photo-1481627834876-b7833e8f5570'),
+    _GalleryItem('Kegiatan Siswa', Icons.flag_outlined,
+        Color(0xFF7B1FA2), 'photo-1488521787991-ed7bbaae773c'),
+    _GalleryItem('Kegiatan Olahraga', Icons.sports_soccer_outlined,
+        Color(0xFFF57C00), 'photo-1574629810360-7efbbe195018'),
+    _GalleryItem('Wisuda & Kelulusan', Icons.school_outlined,
+        Color(0xFF00838F), 'photo-1524178232363-1fb2b075b655'),
   ];
+
+  static String _galleryUrl(String photo) =>
+      'https://images.unsplash.com/$photo?auto=format&fit=crop&w=700&q=70';
 
   @override
   Widget build(BuildContext context) {
@@ -778,13 +794,11 @@ class _GallerySection extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Container(
-                      color: g.color.withValues(alpha: 0.12),
-                      child: Center(
-                        child: Icon(g.icon,
-                            size: 56,
-                            color: g.color.withValues(alpha: 0.4)),
-                      ),
+                    NetworkImageBox(
+                      url: _galleryUrl(g.photo),
+                      color: g.color,
+                      icon: g.icon,
+                      iconSize: 56,
                     ),
                     Positioned(
                       bottom: 0,
@@ -793,12 +807,12 @@ class _GallerySection extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.bottomCenter,
                             end: Alignment.topCenter,
                             colors: [
-                              g.color.withValues(alpha: 0.85),
+                              Color(0xCC000000),
                               Colors.transparent,
                             ],
                           ),
@@ -833,10 +847,11 @@ class _GallerySection extends StatelessWidget {
 }
 
 class _GalleryItem {
-  const _GalleryItem(this.title, this.icon, this.color);
+  const _GalleryItem(this.title, this.icon, this.color, this.photo);
   final String title;
   final IconData icon;
   final Color color;
+  final String photo;
 }
 
 // ─── Info Sekolah ─────────────────────────────────────────────────────────────

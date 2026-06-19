@@ -1,0 +1,39 @@
+# Menjalankan backend SMK Negeri 1 Pati dengan PostgreSQL.
+#
+#   docker compose up --build
+#
+# API  : http://localhost:8000  (dok: /docs)
+# DB   : PostgreSQL 16 pada port 5432
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lms
+      POSTGRES_PASSWORD: lms
+      POSTGRES_DB: smkn1pati
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lms -d smkn1pati"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://lms:lms@db:5432/smkn1pati
+      LMS_SECRET_KEY: ganti-kunci-ini-di-produksi
+      LMS_CORS_ORIGINS: "*"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

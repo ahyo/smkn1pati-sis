@@ -25,6 +25,7 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/enrollment/enrollment_form_screen.dart';
 import '../screens/landing/landing_screen.dart';
+import '../screens/landing/news_detail_screen.dart';
 import '../screens/parent/parent_child_detail_screen.dart';
 import '../screens/parent/parent_dashboard_screen.dart';
 import '../screens/parent/parent_payments_screen.dart';
@@ -61,7 +62,8 @@ GoRouter buildRouter(AuthProvider auth) {
       final isPublic = loc == '/' ||
           loc == '/login' ||
           loc == '/register' ||
-          loc == '/enroll';
+          loc == '/enroll' ||
+          loc.startsWith('/berita');
 
       if (!loggedIn) {
         // Unauthenticated users may visit any public page.
@@ -103,6 +105,11 @@ GoRouter buildRouter(AuthProvider auth) {
       GoRoute(
         path: '/enroll',
         builder: (_, __) => const EnrollmentFormScreen(),
+      ),
+      GoRoute(
+        path: '/berita/:id',
+        builder: (_, st) =>
+            NewsDetailScreen(id: st.pathParameters['id'] ?? ''),
       ),
 
       // Admin

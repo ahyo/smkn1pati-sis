@@ -5,8 +5,9 @@ Menggantikan rencana awal berbasis **Firebase**.
 
 - **FastAPI** + **Uvicorn**
 - **JWT** untuk autentikasi (PyJWT) + hashing kata sandi **PBKDF2** (stdlib)
-- **SQLite** sebagai penyimpanan (pola *document store*, selaras dengan
-  `toMap()` / `fromMap()` di model Flutter) — mudah dipindah ke PostgreSQL nanti
+- Penyimpanan **SQLite** (default) atau **PostgreSQL** — dipilih lewat
+  `DATABASE_URL`. Pola *document store* yang selaras dengan `toMap()` /
+  `fromMap()` di model Flutter.
 
 ## Menjalankan
 
@@ -63,18 +64,48 @@ Di `lib/main.dart` set `useApi = true`, lalu jalankan dengan base URL backend:
 flutter run --dart-define=API_BASE_URL=http://localhost:8000
 ```
 
+## Menjalankan dengan PostgreSQL
+
+### Opsi A — Docker Compose (paling mudah)
+
+Menjalankan API + PostgreSQL sekaligus:
+
+```bash
+cd backend
+docker compose up --build
+```
+
+API di <http://localhost:8000>, PostgreSQL di port 5432. Seed otomatis berjalan
+pada database `smkn1pati`.
+
+### Opsi B — PostgreSQL sendiri
+
+```bash
+export DATABASE_URL=postgresql://lms:lms@localhost:5432/smkn1pati
+uvicorn app.main:app --reload --port 8000
+```
+
+Cek engine yang aktif: `GET /` → `{"engine": "postgresql", ...}`.
+
 ## Konfigurasi (environment variable)
 
-| Variabel              | Default                    | Keterangan                     |
-|-----------------------|----------------------------|--------------------------------|
-| `LMS_DB_PATH`         | `backend/data.db`          | Lokasi file SQLite             |
-| `LMS_SECRET_KEY`      | *(ganti di produksi!)*     | Kunci penanda-tangan JWT       |
-| `LMS_TOKEN_TTL_HOURS` | `168`                      | Masa berlaku token (jam)       |
-| `LMS_CORS_ORIGINS`    | `*`                        | Origin diizinkan (pisah koma)  |
+| Variabel              | Default                    | Keterangan                              |
+|-----------------------|----------------------------|-----------------------------------------|
+| `DATABASE_URL`        | *(kosong → SQLite)*        | `postgresql://user:pass@host:5432/db`   |
+| `LMS_DB_PATH`         | `backend/data.db`          | Lokasi file SQLite (bila tanpa Postgres)|
+| `LMS_SECRET_KEY`      | *(ganti di produksi!)*     | Kunci penanda-tangan JWT                |
+| `LMS_TOKEN_TTL_HOURS` | `168`                      | Masa berlaku token (jam)                |
+| `LMS_CORS_ORIGINS`    | `*`                        | Origin diizinkan (pisah koma)           |
 
-## Catatan produksi: SQLite vs PostgreSQL
+## SQLite vs PostgreSQL untuk produksi
 
-SQLite cocok untuk pengembangan & sekolah skala kecil–menengah. Untuk produksi
-dengan banyak siswa dan penulisan bersamaan tinggi, **PostgreSQL** lebih
-dianjurkan (lihat penjelasan di catatan proyek). Lapisan `app/db.py` sengaja
-dibuat terisolasi sehingga migrasi ke PostgreSQL cukup mengganti modul tersebut.
+| | SQLite | PostgreSQL |
+|---|---|---|
+| Penulisan bersamaan | 1 penulis pada satu waktu | Banyak penulis paralel (MVCC) |
+| Skala | Ribuan baris, beban ringan | Jutaan baris, ratusan koneksi |
+| Cocok untuk | Dev, demo, sekolah kecil | Produksi banyak siswa (mis. ujian serentak) |
+
+**Rekomendasi:** SQLite untuk pengembangan; **PostgreSQL untuk produksi**
+dengan banyak siswa. Karena akses DB terisolasi di `app/db.py` dan memakai pola
+JSON yang sama (`TEXT` di SQLite ↔ `JSONB` di Postgres), perpindahan cukup
+dengan mengatur `DATABASE_URL` — tanpa mengubah router, auth, atau aplikasi Flutter.

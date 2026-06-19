@@ -28,6 +28,7 @@ app.add_middleware(
 def _startup() -> None:
     db.init_db()
     seed.seed_if_empty()
+    print(f"[db] Engine aktif: {db.engine_name()}")
 
 
 @app.get("/", tags=["meta"])
@@ -35,6 +36,7 @@ def root() -> dict[str, str]:
     return {
         "app": "SMK Negeri 1 Pati API",
         "status": "ok",
+        "engine": db.engine_name(),
         "docs": "/docs",
     }
 

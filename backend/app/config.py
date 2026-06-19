@@ -4,7 +4,12 @@ Semua nilai dapat ditimpa lewat environment variable agar mudah dideploy.
 """
 import os
 
-# Lokasi file database SQLite.
+# Pemilihan engine database:
+#   - DATABASE_URL kosong            -> SQLite (file LMS_DB_PATH)
+#   - postgresql://user:pass@host/db -> PostgreSQL
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+
+# Lokasi file database SQLite (dipakai bila DATABASE_URL kosong).
 DB_PATH = os.environ.get("LMS_DB_PATH", os.path.join(os.path.dirname(__file__), "..", "data.db"))
 
 # Kunci penanda-tangan JWT. WAJIB diganti di produksi (mis. lewat env LMS_SECRET_KEY).
