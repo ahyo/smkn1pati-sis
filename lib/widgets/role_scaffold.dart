@@ -160,7 +160,7 @@ class _Sidebar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Sekolah LMS',
+                        'SMK Negeri 1 Pati',
                         style: theme.textTheme.titleMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -329,7 +329,7 @@ class _MobileDrawer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sekolah LMS',
+                          'SMK Negeri 1 Pati',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         Text(

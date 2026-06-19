@@ -16,7 +16,7 @@ class AdminSettingsScreen extends StatelessWidget {
             child: ListTile(
               leading: Icon(Icons.school),
               title: Text('Nama Sekolah'),
-              subtitle: Text('Sekolah LMS'),
+              subtitle: Text('SMK Negeri 1 Pati'),
               trailing: Icon(Icons.chevron_right),
             ),
           ),
