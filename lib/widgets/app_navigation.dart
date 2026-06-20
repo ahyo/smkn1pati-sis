@@ -120,6 +120,10 @@ List<NavItem> navItemsFor(UserRole role) {
             label: 'Dashboard',
             icon: Icons.dashboard_outlined),
         NavItem(
+            path: '/parent/attendance',
+            label: 'Presensi Anak',
+            icon: Icons.event_available_outlined),
+        NavItem(
             path: '/parent/payments',
             label: 'Pembayaran',
             icon: Icons.payments_outlined),

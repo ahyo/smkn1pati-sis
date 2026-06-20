@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -58,8 +59,21 @@ class ParentChildDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Presensi (${attendance.length} hari)',
-              style: Theme.of(context).textTheme.titleMedium),
+          Row(
+            children: [
+              Expanded(
+                child: Text('Presensi (${attendance.length} hari)',
+                    style: Theme.of(context).textTheme.titleMedium),
+              ),
+              if (attendance.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () =>
+                      context.go('/parent/attendance?child=${child.id}'),
+                  icon: const Icon(Icons.open_in_new, size: 16),
+                  label: const Text('Lihat semua'),
+                ),
+            ],
+          ),
           const SizedBox(height: 8),
           if (attendance.isEmpty)
             const Padding(
