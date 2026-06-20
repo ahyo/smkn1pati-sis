@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
-import '../../widgets/page_header.dart';
+import '../../widgets/dashboard.dart';
 import '../../widgets/role_scaffold.dart';
 
 class TeacherDashboardScreen extends StatelessWidget {
@@ -21,100 +21,99 @@ class TeacherDashboardScreen extends StatelessWidget {
         .map((e) => data.submissionsForExam(e.id).length)
         .fold<int>(0, (a, b) => a + b);
 
-    final cross = MediaQuery.of(context).size.width > 1100
-        ? 4
-        : MediaQuery.of(context).size.width > 700
-            ? 2
-            : 1;
+    final width = MediaQuery.of(context).size.width;
+    final cross = width > 1100 ? 4 : width > 700 ? 2 : 1;
+    final actionCross = width > 700 ? 4 : 2;
 
     return RoleScaffold(
       title: 'Dashboard',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 28),
         children: [
-          PageHeader(
-            title: 'Halo, ${user.name}',
-            subtitle: 'Selamat mengajar hari ini',
+          DashboardHero(
+            name: user.name,
+            roleLabel: 'Guru',
+            subtitle: 'Selamat mengajar hari ini. Semoga lancar!',
           ),
+          const _Section(title: 'Ringkasan'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: GridView.count(
-              crossAxisCount: cross,
+            child: GridView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 2.4,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: cross,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+                mainAxisExtent: 98,
+              ),
               children: [
-                _StatCard(
+                MetricCard(
                   label: 'Materi',
                   value: '${myMaterials.length}',
                   icon: Icons.menu_book_outlined,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: const Color(0xFF3046A5),
                   onTap: () => context.go('/teacher/materials'),
                 ),
-                _StatCard(
+                MetricCard(
                   label: 'Ujian',
                   value: '${myExams.length}',
                   icon: Icons.quiz_outlined,
-                  color: Colors.indigo.shade700,
+                  color: const Color(0xFF3949AB),
                   onTap: () => context.go('/teacher/exams'),
                 ),
-                _StatCard(
+                MetricCard(
                   label: 'Submisi',
                   value: '$pendingSubs',
                   icon: Icons.assessment_outlined,
-                  color: Colors.green.shade700,
+                  color: const Color(0xFF2E7D32),
                   onTap: () => context.go('/teacher/exams'),
                 ),
-                _StatCard(
+                MetricCard(
                   label: 'Jurnal Mengajar',
                   value: '${myJournals.length}',
                   icon: Icons.event_note_outlined,
-                  color: Colors.orange.shade700,
+                  color: const Color(0xFFE65100),
                   onTap: () => context.go('/teacher/journals'),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 32),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-            child: Text('Akses Cepat',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600)),
-          ),
+          const _Section(title: 'Akses Cepat'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: GridView.count(
-              crossAxisCount:
-                  MediaQuery.of(context).size.width > 700 ? 4 : 2,
+            child: GridView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.2,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: actionCross,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+                mainAxisExtent: 124,
+              ),
               children: [
-                _ActionTile(
+                QuickActionTile(
                   icon: Icons.event_available_outlined,
                   title: 'Presensi Saya',
+                  color: const Color(0xFF0F8B8D),
                   onTap: () => context.go('/teacher/attendance'),
                 ),
-                _ActionTile(
+                QuickActionTile(
                   icon: Icons.fact_check_outlined,
                   title: 'Ambil Presensi Siswa',
+                  color: const Color(0xFF2E7D32),
                   onTap: () => context.go('/teacher/class-attendance/edit'),
                 ),
-                _ActionTile(
+                QuickActionTile(
                   icon: Icons.note_add_outlined,
                   title: 'Buat Materi',
+                  color: const Color(0xFF3046A5),
                   onTap: () => context.go('/teacher/materials/new'),
                 ),
-                _ActionTile(
+                QuickActionTile(
                   icon: Icons.event_note_outlined,
                   title: 'Tulis Jurnal',
+                  color: const Color(0xFFE65100),
                   onTap: () => context.go('/teacher/journals/new'),
                 ),
               ],
@@ -126,113 +125,15 @@ class TeacherDashboardScreen extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(value,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                    Text(label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                )),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionTile extends StatelessWidget {
-  const _ActionTile({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-  });
-  final IconData icon;
+class _Section extends StatelessWidget {
+  const _Section({required this.title});
   final String title;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: theme.colorScheme.primary),
-              ),
-              Flexible(
-                child: Text(title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 22, 24, 14),
+      child: SectionLabel(title: title),
     );
   }
 }

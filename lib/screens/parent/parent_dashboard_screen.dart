@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import '../../models/app_user.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
+import '../../widgets/dashboard.dart';
 import '../../widgets/empty_state.dart';
-import '../../widgets/page_header.dart';
 import '../../widgets/role_scaffold.dart';
 
 class ParentDashboardScreen extends StatelessWidget {
@@ -24,11 +24,12 @@ class ParentDashboardScreen extends StatelessWidget {
     return RoleScaffold(
       title: 'Dashboard',
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 28),
         children: [
-          PageHeader(
-            title: 'Halo, ${user.name}',
-            subtitle: 'Pantau perkembangan anak Anda',
+          DashboardHero(
+            name: user.name,
+            roleLabel: 'Orang Tua',
+            subtitle: 'Pantau perkembangan belajar anak Anda.',
           ),
           if (children.isEmpty)
             const Padding(
@@ -40,7 +41,11 @@ class ParentDashboardScreen extends StatelessWidget {
                     'Hubungi admin sekolah untuk menautkan akun anak Anda.',
               ),
             )
-          else
+          else ...[
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 22, 24, 14),
+              child: SectionLabel(title: 'Anak Anda'),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -51,113 +56,162 @@ class ParentDashboardScreen extends StatelessWidget {
                   final journals = data.studyJournalsByStudent(c.id);
                   final avg = subs.isEmpty
                       ? null
-                      : (subs
-                                  .map((s) => s.percentage)
-                                  .reduce((a, b) => a + b) /
+                      : (subs.map((s) => s.percentage).reduce((a, b) => a + b) /
                               subs.length)
                           .round();
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Card(
-                      child: InkWell(
-                        onTap: () => context.go('/parent/children/${c.id}'),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 28,
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer,
-                                child: Text(
-                                  c.name.isEmpty ? '?' : c.name[0],
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
-                                      ?.copyWith(fontWeight: FontWeight.w700),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(c.name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(
-                                                fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Kelas ${cls?.name ?? '-'}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Wrap(
-                                      spacing: 16,
-                                      children: [
-                                        _MiniStat(
-                                            icon: Icons.assessment_outlined,
-                                            label:
-                                                '${subs.length} ujian'),
-                                        if (avg != null)
-                                          _MiniStat(
-                                              icon: Icons.trending_up,
-                                              label: 'Rata-rata $avg%'),
-                                        _MiniStat(
-                                            icon: Icons.book_outlined,
-                                            label:
-                                                '${journals.length} jurnal'),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.chevron_right),
-                            ],
-                          ),
-                        ),
-                      ),
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: _ChildCard(
+                      name: c.name,
+                      className: cls?.name ?? '-',
+                      exams: subs.length,
+                      journals: journals.length,
+                      avg: avg,
+                      onTap: () => context.go('/parent/children/${c.id}'),
                     ),
                   );
                 }).toList(),
               ),
             ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({required this.icon, required this.label});
+class _ChildCard extends StatelessWidget {
+  const _ChildCard({
+    required this.name,
+    required this.className,
+    required this.exams,
+    required this.journals,
+    required this.avg,
+    required this.onTap,
+  });
+
+  final String name;
+  final String className;
+  final int exams;
+  final int journals;
+  final int? avg;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      scheme.primary,
+                      Color.lerp(scheme.primary, scheme.secondary, 0.7)!,
+                    ],
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  name.isEmpty ? '?' : name[0].toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name,
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Kelas $className',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _StatChip(
+                            icon: Icons.assessment_outlined,
+                            label: '$exams ujian'),
+                        if (avg != null)
+                          _StatChip(
+                              icon: Icons.trending_up,
+                              label: 'Rata-rata $avg%'),
+                        _StatChip(
+                            icon: Icons.book_outlined,
+                            label: '$journals jurnal'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({required this.icon, required this.label});
   final IconData icon;
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon,
-            size: 16,
-            color: Theme.of(context).colorScheme.onSurfaceVariant),
-        const SizedBox(width: 4),
-        Text(label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                )),
-      ],
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 5),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: scheme.onSurfaceVariant)),
+        ],
+      ),
     );
   }
 }

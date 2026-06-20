@@ -86,7 +86,7 @@ class _TopBar extends StatelessWidget {
       height: 72,
       padding: const EdgeInsets.fromLTRB(28, 10, 20, 10),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         border: Border(
           bottom: BorderSide(
             color: Theme.of(
@@ -94,6 +94,13 @@ class _TopBar extends StatelessWidget {
             ).colorScheme.outlineVariant.withValues(alpha: 0.65),
           ),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -144,8 +151,23 @@ class _Sidebar extends StatelessWidget {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.primary,
+                        Color.lerp(theme.colorScheme.primary,
+                            theme.colorScheme.secondary, 0.7)!,
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                   child: Icon(
                     Icons.school,
@@ -161,7 +183,8 @@ class _Sidebar extends StatelessWidget {
                     children: [
                       Text(
                         'SMK Negeri 1 Pati',
-                        style: theme.textTheme.titleMedium,
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
@@ -184,61 +207,26 @@ class _Sidebar extends StatelessWidget {
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 18, 8),
+            child: Text(
+              'MENU',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               itemCount: items.length,
-              itemBuilder: (_, i) {
-                final item = items[i];
-                final selected = i == activeIndex;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Material(
-                    color: selected
-                        ? theme.colorScheme.primary.withValues(alpha: 0.10)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(9),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(9),
-                      onTap: () => context.go(item.path),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 11,
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              item.icon,
-                              size: 20,
-                              color: selected
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                item.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: selected
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurface,
-                                  fontWeight: selected
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+              itemBuilder: (_, i) => _NavTile(
+                item: items[i],
+                selected: i == activeIndex,
+              ),
             ),
           ),
           Padding(
@@ -289,6 +277,85 @@ class _Sidebar extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _NavTile extends StatefulWidget {
+  const _NavTile({required this.item, required this.selected});
+  final NavItem item;
+  final bool selected;
+
+  @override
+  State<_NavTile> createState() => _NavTileState();
+}
+
+class _NavTileState extends State<_NavTile> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final selected = widget.selected;
+    final color = selected ? scheme.primary : scheme.onSurfaceVariant;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hover = true),
+        onExit: (_) => setState(() => _hover = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          decoration: BoxDecoration(
+            color: selected
+                ? scheme.primary.withValues(alpha: 0.12)
+                : (_hover
+                    ? scheme.surfaceContainerHighest.withValues(alpha: 0.7)
+                    : Colors.transparent),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => context.go(widget.item.path),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 140),
+                      width: 3,
+                      height: 20,
+                      margin: const EdgeInsets.only(right: 9),
+                      decoration: BoxDecoration(
+                        color: selected ? scheme.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Icon(widget.item.icon, size: 20, color: color),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        widget.item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: selected ? scheme.primary : scheme.onSurface,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
