@@ -112,7 +112,9 @@ class ParentChildDetailScreen extends StatelessWidget {
                               fontWeight: FontWeight.w700)),
                     ),
                     title: Text(df.format(a.date)),
-                    subtitle: Text(data.classById(a.classId)?.name ?? '-'),
+                    subtitle: Text(a.subjectId == null
+                        ? 'Umum'
+                        : data.subjectById(a.subjectId!)?.name ?? '-'),
                     trailing: AttendanceStatusChip(status: a.status),
                   ),
                 )),

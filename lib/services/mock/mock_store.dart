@@ -1527,39 +1527,51 @@ class MockStore {
     }
 
     // ============================== Student attendance ==============================
-    // Last 10 weekday sessions per class, all students recorded.
+    // Presensi per mata pelajaran: untuk tiap kelas, ambil mapel yang diajarkan
+    // (diturunkan dari ujian kelas tsb), lalu catat 8 pertemuan terakhir per
+    // mapel untuk semua siswa.
     for (final classId in classOrder) {
       final cls = classes[classId]!;
+      final classSubjects = exams.values
+          .where((e) => e.classId == classId)
+          .map((e) => e.subjectId)
+          .toSet()
+          .toList();
+      if (classSubjects.isEmpty) continue;
+
       var dayOffset = 0;
       var sessionCount = 0;
-      while (sessionCount < 10 && dayOffset < 30) {
+      while (sessionCount < 8 && dayOffset < 45) {
         final d = dayOnly(now, dayOffset);
         dayOffset++;
         if (d.weekday > 5) continue;
 
-        for (final studentId in cls.studentIds) {
-          final r = rand.nextDouble();
-          final AttendanceStatus status;
-          if (r < 0.85) {
-            status = AttendanceStatus.hadir;
-          } else if (r < 0.91) {
-            status = AttendanceStatus.terlambat;
-          } else if (r < 0.95) {
-            status = AttendanceStatus.izin;
-          } else if (r < 0.98) {
-            status = AttendanceStatus.sakit;
-          } else {
-            status = AttendanceStatus.alpa;
+        for (final subjectId in classSubjects) {
+          for (final studentId in cls.studentIds) {
+            final r = rand.nextDouble();
+            final AttendanceStatus status;
+            if (r < 0.85) {
+              status = AttendanceStatus.hadir;
+            } else if (r < 0.91) {
+              status = AttendanceStatus.terlambat;
+            } else if (r < 0.95) {
+              status = AttendanceStatus.izin;
+            } else if (r < 0.98) {
+              status = AttendanceStatus.sakit;
+            } else {
+              status = AttendanceStatus.alpa;
+            }
+            final id = 'sa_${classId}_${subjectId}_${sessionCount}_$studentId';
+            studentAttendance[id] = StudentAttendance(
+              id: id,
+              classId: classId,
+              studentId: studentId,
+              subjectId: subjectId,
+              date: d,
+              status: status,
+              recordedByTeacherId: cls.homeroomTeacherId,
+            );
           }
-          final id = 'sa_${classId}_${sessionCount}_$studentId';
-          studentAttendance[id] = StudentAttendance(
-            id: id,
-            classId: classId,
-            studentId: studentId,
-            date: d,
-            status: status,
-            recordedByTeacherId: cls.homeroomTeacherId,
-          );
         }
         sessionCount++;
       }

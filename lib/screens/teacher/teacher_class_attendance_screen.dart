@@ -13,6 +13,7 @@ import '../../widgets/role_scaffold.dart';
 
 class _ClassSession {
   final String classId;
+  final String? subjectId;
   final DateTime date;
   final int total;
   final int hadir;
@@ -23,6 +24,7 @@ class _ClassSession {
 
   const _ClassSession({
     required this.classId,
+    required this.subjectId,
     required this.date,
     required this.total,
     required this.hadir,
@@ -44,11 +46,12 @@ class TeacherClassAttendanceScreen extends StatelessWidget {
     // Build session list across all classes (most recent first).
     final Map<String, _ClassSession> sessions = {};
     for (final a in data.studentAttendance) {
-      final key = '${a.classId}|${a.dateKeyStr}';
+      final key = '${a.classId}|${a.subjectId ?? '-'}|${a.dateKeyStr}';
       final prev = sessions[key];
       if (prev == null) {
         sessions[key] = _ClassSession(
           classId: a.classId,
+          subjectId: a.subjectId,
           date: DateTime(a.date.year, a.date.month, a.date.day),
           total: 1,
           hadir: a.status == AttendanceStatus.hadir ? 1 : 0,
@@ -60,6 +63,7 @@ class TeacherClassAttendanceScreen extends StatelessWidget {
       } else {
         sessions[key] = _ClassSession(
           classId: prev.classId,
+          subjectId: prev.subjectId,
           date: prev.date,
           total: prev.total + 1,
           hadir: prev.hadir + (a.status == AttendanceStatus.hadir ? 1 : 0),
@@ -77,8 +81,10 @@ class TeacherClassAttendanceScreen extends StatelessWidget {
     String dateKey(DateTime d) =>
         '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-    void editSession(String classId, DateTime date) {
-      context.go('/teacher/class-attendance/edit?classId=$classId&date=${dateKey(date)}');
+    void editSession(String classId, DateTime date, String? subjectId) {
+      final sub = subjectId == null ? '' : '&subjectId=$subjectId';
+      context.go(
+          '/teacher/class-attendance/edit?classId=$classId&date=${dateKey(date)}$sub');
     }
 
     return RoleScaffold(
@@ -103,7 +109,7 @@ class TeacherClassAttendanceScreen extends StatelessWidget {
                 child: SingleChildScrollView(
                   child: AppTable<_ClassSession>(
                     items: list,
-                    onRowTap: (s) => editSession(s.classId, s.date),
+                    onRowTap: (s) => editSession(s.classId, s.date, s.subjectId),
                     columns: [
                       AppTableColumn(
                         label: 'Tanggal',
@@ -113,6 +119,12 @@ class TeacherClassAttendanceScreen extends StatelessWidget {
                         label: 'Kelas',
                         build: (s) =>
                             Text(data.classById(s.classId)?.name ?? '-'),
+                      ),
+                      AppTableColumn(
+                        label: 'Mata Pelajaran',
+                        build: (s) => Text(s.subjectId == null
+                            ? 'Umum'
+                            : data.subjectById(s.subjectId!)?.name ?? '-'),
                       ),
                       AppTableColumn(
                         label: 'Hadir',
@@ -146,7 +158,7 @@ class TeacherClassAttendanceScreen extends StatelessWidget {
                       AppTableAction(
                         icon: Icons.edit_outlined,
                         tooltip: 'Edit',
-                        onPressed: (ctx, s) => editSession(s.classId, s.date),
+                        onPressed: (ctx, s) => editSession(s.classId, s.date, s.subjectId),
                       ),
                     ],
                     emptyIcon: Icons.fact_check_outlined,
@@ -179,7 +191,7 @@ class TeacherClassAttendanceScreen extends StatelessWidget {
                       itemBuilder: (_, s, i) {
                         return Card(
                           child: ListTile(
-                            onTap: () => editSession(s.classId, s.date),
+                            onTap: () => editSession(s.classId, s.date, s.subjectId),
                             leading: CircleAvatar(
                               backgroundColor: Theme.of(context)
                                   .colorScheme
@@ -187,7 +199,7 @@ class TeacherClassAttendanceScreen extends StatelessWidget {
                               child: Text('${s.date.day}'),
                             ),
                             title: Text(
-                                '${i + 1}. ${data.classById(s.classId)?.name ?? '-'}',
+                                '${i + 1}. ${data.classById(s.classId)?.name ?? '-'} • ${s.subjectId == null ? 'Umum' : data.subjectById(s.subjectId!)?.name ?? '-'}',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.w600)),
                             subtitle: Text(

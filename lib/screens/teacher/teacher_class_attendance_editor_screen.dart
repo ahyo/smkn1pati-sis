@@ -18,10 +18,12 @@ class TeacherClassAttendanceEditorScreen extends StatefulWidget {
     super.key,
     this.classId,
     this.date,
+    this.subjectId,
   });
 
   final String? classId;
   final DateTime? date;
+  final String? subjectId;
 
   @override
   State<TeacherClassAttendanceEditorScreen> createState() =>
@@ -31,6 +33,7 @@ class TeacherClassAttendanceEditorScreen extends StatefulWidget {
 class _TeacherClassAttendanceEditorScreenState
     extends State<TeacherClassAttendanceEditorScreen> {
   String? _classId;
+  String? _subjectId;
   late DateTime _date;
   final Map<String, AttendanceStatus> _selections = {};
   bool _hydrated = false;
@@ -39,15 +42,16 @@ class _TeacherClassAttendanceEditorScreenState
   void initState() {
     super.initState();
     _classId = widget.classId;
+    _subjectId = widget.subjectId;
     _date = widget.date ?? DateTime.now();
     _date = DateTime(_date.year, _date.month, _date.day);
   }
 
   void _hydrate(DataProvider data) {
     if (_hydrated) return;
-    if (_classId != null) {
-      final existing =
-          data.studentAttendanceForClassOnDate(_classId!, _date);
+    if (_classId != null && _subjectId != null) {
+      final existing = data.studentAttendanceForClassOnDate(_classId!, _date,
+          subjectId: _subjectId);
       for (final a in existing) {
         _selections[a.studentId] = a.status;
       }
@@ -80,9 +84,9 @@ class _TeacherClassAttendanceEditorScreenState
   }
 
   Future<void> _save() async {
-    if (_classId == null) {
+    if (_classId == null || _subjectId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih kelas terlebih dahulu')),
+        const SnackBar(content: Text('Pilih kelas dan mata pelajaran dahulu')),
       );
       return;
     }
@@ -92,7 +96,8 @@ class _TeacherClassAttendanceEditorScreenState
     if (cls == null) return;
 
     final existing = {
-      for (final a in data.studentAttendanceForClassOnDate(_classId!, _date))
+      for (final a in data.studentAttendanceForClassOnDate(_classId!, _date,
+          subjectId: _subjectId))
         a.studentId: a,
     };
 
@@ -103,6 +108,7 @@ class _TeacherClassAttendanceEditorScreenState
         id: prev?.id ?? const Uuid().v4(),
         classId: _classId!,
         studentId: studentId,
+        subjectId: _subjectId,
         date: _date,
         status: status,
         recordedByTeacherId: user.id,
@@ -163,6 +169,7 @@ class _TeacherClassAttendanceEditorScreenState
                               .toList(),
                           onChanged: (v) => setState(() {
                             _classId = v;
+                            _subjectId = null;
                             _selections.clear();
                             _hydrated = false;
                           }),
@@ -200,6 +207,27 @@ class _TeacherClassAttendanceEditorScreenState
                         );
                       }),
                       if (cls != null) ...[
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String?>(
+                          initialValue: _subjectId,
+                          isExpanded: true,
+                          items: data
+                              .subjectsForClass(cls.id)
+                              .map((s) => DropdownMenuItem(
+                                  value: s.id, child: Text(s.name)))
+                              .toList(),
+                          onChanged: (v) => setState(() {
+                            _subjectId = v;
+                            _selections.clear();
+                            _hydrated = false;
+                          }),
+                          decoration: const InputDecoration(
+                            labelText: 'Mata Pelajaran',
+                            prefixIcon: Icon(Icons.menu_book_outlined),
+                          ),
+                        ),
+                      ],
+                      if (cls != null && _subjectId != null) ...[
                         const SizedBox(height: 20),
                         Row(
                           children: [
@@ -239,6 +267,12 @@ class _TeacherClassAttendanceEditorScreenState
                   padding: EdgeInsets.all(40),
                   child: Center(child: Text('Pilih kelas untuk memulai')),
                 )
+              else if (_subjectId == null)
+                const Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(
+                      child: Text('Pilih mata pelajaran untuk memulai')),
+                )
               else if (students.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(40),
@@ -272,7 +306,8 @@ class _TeacherClassAttendanceEditorScreenState
                   ),
                   const SizedBox(width: 12),
                   FilledButton.icon(
-                    onPressed: cls == null ? null : _save,
+                    onPressed:
+                        (cls == null || _subjectId == null) ? null : _save,
                     icon: const Icon(Icons.save_outlined),
                     label: const Text('Simpan Presensi'),
                   ),

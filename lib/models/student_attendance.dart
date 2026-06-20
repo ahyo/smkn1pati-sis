@@ -4,6 +4,9 @@ class StudentAttendance {
   final String id;
   final String classId;
   final String studentId;
+
+  /// Mata pelajaran presensi ini. Null untuk presensi harian lama (umum).
+  final String? subjectId;
   final DateTime date;
   final AttendanceStatus status;
   final String? recordedByTeacherId;
@@ -13,6 +16,7 @@ class StudentAttendance {
     required this.id,
     required this.classId,
     required this.studentId,
+    this.subjectId,
     required this.date,
     required this.status,
     this.recordedByTeacherId,
@@ -27,6 +31,7 @@ class StudentAttendance {
   Map<String, dynamic> toMap() => {
         'classId': classId,
         'studentId': studentId,
+        'subjectId': subjectId,
         'date': date.toIso8601String(),
         'status': status.name,
         'recordedByTeacherId': recordedByTeacherId,
@@ -38,6 +43,7 @@ class StudentAttendance {
       id: id,
       classId: map['classId'] as String? ?? '',
       studentId: map['studentId'] as String? ?? '',
+      subjectId: map['subjectId'] as String?,
       date: DateTime.tryParse(map['date'] as String? ?? '') ?? DateTime.now(),
       status: AttendanceStatus.fromString(map['status'] as String?),
       recordedByTeacherId: map['recordedByTeacherId'] as String?,

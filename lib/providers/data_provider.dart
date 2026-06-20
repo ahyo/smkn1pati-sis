@@ -193,11 +193,29 @@ class DataProvider extends ChangeNotifier {
         ..sort((a, b) => b.date.compareTo(a.date));
 
   List<StudentAttendance> studentAttendanceForClassOnDate(
-      String classId, DateTime date) {
+      String classId, DateTime date, {String? subjectId}) {
     final key = StudentAttendance.dateKey(date);
     return studentAttendance
-        .where((a) => a.classId == classId && a.dateKeyStr == key)
+        .where((a) =>
+            a.classId == classId &&
+            a.dateKeyStr == key &&
+            (subjectId == null || a.subjectId == subjectId))
         .toList();
+  }
+
+  /// Mata pelajaran yang diajarkan di sebuah kelas (diturunkan dari ujian &
+  /// materi yang ditautkan ke kelas tsb), urut berdasarkan nama.
+  List<Subject> subjectsForClass(String classId) {
+    final ids = <String>{
+      ...exams.where((e) => e.classId == classId).map((e) => e.subjectId),
+      ...materials.where((m) => m.classId == classId).map((m) => m.subjectId),
+    };
+    final list = ids
+        .map(subjectById)
+        .whereType<Subject>()
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    return list;
   }
 
   /// Returns dates (deduped, sorted desc) for which any attendance was

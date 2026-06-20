@@ -302,10 +302,12 @@ GoRouter buildRouter(AuthProvider auth) {
                 builder: (_, st) {
                   final classId = st.uri.queryParameters['classId'];
                   final dateStr = st.uri.queryParameters['date'];
+                  final subjectId = st.uri.queryParameters['subjectId'];
                   final date = dateStr == null ? null : DateTime.tryParse(dateStr);
                   return TeacherClassAttendanceEditorScreen(
                     classId: classId,
                     date: date,
+                    subjectId: subjectId,
                   );
                 },
               ),

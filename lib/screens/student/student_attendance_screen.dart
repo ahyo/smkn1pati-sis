@@ -74,13 +74,14 @@ class StudentAttendanceScreen extends StatelessWidget {
                         build: (a) => Text(df.format(a.date)),
                       ),
                       AppTableColumn(
-                        label: 'Status',
-                        build: (a) => AttendanceStatusChip(status: a.status),
+                        label: 'Mata Pelajaran',
+                        build: (a) => Text(a.subjectId == null
+                            ? 'Umum'
+                            : data.subjectById(a.subjectId!)?.name ?? '-'),
                       ),
                       AppTableColumn(
-                        label: 'Kelas',
-                        build: (a) =>
-                            Text(data.classById(a.classId)?.name ?? '-'),
+                        label: 'Status',
+                        build: (a) => AttendanceStatusChip(status: a.status),
                       ),
                       AppTableColumn(
                         label: 'Dicatat oleh',
@@ -119,7 +120,7 @@ class StudentAttendanceScreen extends StatelessWidget {
                                 style: const TextStyle(
                                     fontWeight: FontWeight.w600)),
                             subtitle: Text(
-                                '${data.classById(a.classId)?.name ?? '-'} • Dicatat oleh ${data.userById(a.recordedByTeacherId ?? '')?.name ?? '-'}'),
+                                '${a.subjectId == null ? 'Umum' : data.subjectById(a.subjectId!)?.name ?? '-'} • Dicatat oleh ${data.userById(a.recordedByTeacherId ?? '')?.name ?? '-'}'),
                             trailing: AttendanceStatusChip(status: a.status),
                           ),
                         );
